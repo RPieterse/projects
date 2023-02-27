@@ -1,0 +1,33 @@
+
+/* GLOBAL */
+main {
+    padding: 0 2rem 2rem;
+}
+
+/* CURSOR */
+.cursor-pointer {
+    cursor: pointer;
+}
+.cursor-default {
+    cursor: default;
+}
+
+/* SIZING */
+.w-full {
+    width: 100%;
+}
+
+/* FLEX */
+.flex-1{
+    flex: 1
+}
+
+/* POSITIONING */
+.self-center {
+    align-self:center
+}
+
+/* FONT */
+.bold {
+    font-weight: bold
+}

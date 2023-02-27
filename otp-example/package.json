@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@types/jest": "^29.2.6"
+  },
+  "scripts": {
+    "install": "cd api && npm i && cd .. && cd client && npm i",
+    "api-dev": "cd api && npm run dev",
+    "api": "cd api && npm run start",
+    "client": "cd client && npm run start",
+    "api-test": "cd api && npm run test",
+    "client-test": "cd client && npm run test"
+  }
+}
