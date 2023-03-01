@@ -2,14 +2,39 @@ import handler from "app/middleware/next-connect";
 import User from "app/models/user";
 import jwt from "jsonwebtoken";
 import { setCookie } from "cookies-next";
+import { NextApiRequest, NextApiResponse } from "next";
+import stringHelpers from "app/helpers/strings";
+import { NextHandler } from "next-connect";
 
-handler().post(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
+const validate = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  next: NextHandler
+) => {
+  switch (req.method?.toLowerCase()) {
+    case "post":
+      if (!req.body.email || !req.body.password) {
+        return res.status(400).json({ message: "Email and password required" });
+      }
+      if (!stringHelpers.isEmail(req.body.email)) {
+        return res.status(400).json({ message: "Email is invalid" });
+      }
+      if (!stringHelpers.isValidPassword(req.body.password)) {
+        return res.status(400).json({ message: "Password is invalid" });
+      }
+      return next();
+    default:
+      return res.status(405).json({ message: "Method not allowed" });
   }
+};
+
+const register = async (req: NextApiRequest, res: NextApiResponse) => {
+  const { email, password } = req.body;
+
   try {
-    const user = await User.create({ email, password });
+    const user = await User.create({ email, password }).catch((err) => {
+      return res.status(400).json({ message: err.message });
+    });
     if (!user) {
       return res.status(400).json({ message: "User not created" });
     }
@@ -22,11 +47,13 @@ handler().post(async (req, res) => {
       res,
       req,
       httpOnly: true,
-      maxAge: 60 * 60 * 24,
+      maxAge: parseInt(process.env.COOKIE_EXPIRE || "86400"),
     });
 
     res.status(200).json(user);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
-});
+};
+
+handler({ validate }).post(register);

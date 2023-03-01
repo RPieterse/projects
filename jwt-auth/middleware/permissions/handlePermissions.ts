@@ -39,6 +39,7 @@ export default (
         return next();
       }
     }
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   // if user is logged in check if path includes user role and method is allowed

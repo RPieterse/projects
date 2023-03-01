@@ -2,15 +2,45 @@ import handler from "app/middleware/next-connect";
 import User from "app/models/user";
 import jwt from "jsonwebtoken";
 import { setCookie } from "cookies-next";
+import { NextApiRequest, NextApiResponse } from "next";
+import { NextHandler } from "next-connect";
+import stringHelpers from "app/helpers/strings";
 
-handler().post(async (req, res) => {
+const validate = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  next: NextHandler
+) => {
+  switch (req.method?.toLowerCase()) {
+    case "post":
+      if (!req.body.email || !req.body.password) {
+        return res.status(400).json({ message: "Email and password required" });
+      }
+      if (!stringHelpers.isEmail(req.body.email)) {
+        return res.status(400).json({ message: "Email is invalid" });
+      }
+      if (!stringHelpers.isValidPassword(req.body.password)) {
+        return res.status(400).json({ message: "Password is invalid" });
+      }
+      return next();
+    default:
+      return res.status(405).json({ message: "Method not allowed" });
+  }
+};
+
+const login = async (req: NextApiRequest, res: NextApiResponse) => {
   // login user with email and password using the findByEmailAndPassword method from the user model and return the user and jwt token as n http only cookie
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
-  }
   try {
-    const user = await User.findByEmailAndPassword(email, password);
+    const user = await User.findByEmailAndPassword(email, password).catch(
+      (err) => {
+        return res.status(400).json({ message: err.message });
+      }
+    );
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
     // create jwt token using jwt
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
       expiresIn: "1d",
@@ -20,11 +50,13 @@ handler().post(async (req, res) => {
       res,
       req,
       httpOnly: true,
-      maxAge: 60 * 60 * 24,
+      maxAge: parseInt(process.env.COOKIE_EXPIRE || "86400"),
     });
 
     res.status(200).json(user);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
-});
+};
+
+handler({ validate }).post(login);
