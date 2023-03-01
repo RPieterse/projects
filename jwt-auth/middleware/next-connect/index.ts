@@ -15,9 +15,18 @@ export default (config?: {
     req: NextApiRequest,
     res: NextApiResponse,
     next: NextHandler
-  ) => void; // update function signature
+  ) => void;
+  middleware?: ((
+    req: NextApiRequest,
+    res: NextApiResponse,
+    next: NextHandler
+  ) => void)[];
 }) => {
-  const { options, authentication, useMemoryDb, validate } = config || {};
+  // Destructure config object
+  const { options, authentication, useMemoryDb, validate, middleware } =
+    config || {};
+
+  // This is the handler that is returned from this function with default options
   const _h = handler({
     onError(error, _, res) {
       res
@@ -30,23 +39,38 @@ export default (config?: {
     ...options,
   });
 
+  // Check authentication method
   if (authentication && authentication !== "jwt") {
     throw new Error("Invalid authentication method");
   }
 
-  if (authentication) {
-    _h.use(passport.authenticate(authentication, { session: false }));
-  }
+  // Connect to database
   if (useMemoryDb) {
     _h.use(() => db.connect("memory"));
   } else {
     _h.use(() => db.connect());
   }
 
+  // Authenticate request
+  if (authentication) {
+    _h.use(passport.authenticate(authentication, { session: false }));
+  }
+
+  // Handle permissions
   _h.use(handlePermissions);
 
+  // Validate request body
   if (typeof validate === "function") {
     _h.use(validate);
+  }
+
+  // Add custom middleware
+  if (
+    middleware &&
+    Array.isArray(config?.middleware) &&
+    middleware.length > 0
+  ) {
+    middleware.forEach((m) => _h.use(m));
   }
 
   return _h;

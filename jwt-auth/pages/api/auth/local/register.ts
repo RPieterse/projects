@@ -24,7 +24,7 @@ const validate = (
       }
       return next();
     default:
-      return res.status(405).json({ message: "Method not allowed" });
+      return next();
   }
 };
 
