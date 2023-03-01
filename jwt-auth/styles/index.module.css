@@ -1,0 +1,7 @@
+
+.header {
+    text-align: center;
+    padding-block: 2rem;
+    cursor: default;
+    user-select: none;
+}

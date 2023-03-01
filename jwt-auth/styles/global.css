@@ -1,0 +1,16 @@
+body {
+    background-color: rgba(0, 0, 0, 0.9);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-size: 4em;
+    font-weight: 300;
+    margin: 0;
+    padding: 0;
+    color: white;
+}

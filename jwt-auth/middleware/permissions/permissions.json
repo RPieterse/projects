@@ -1,0 +1,55 @@
+[
+  {
+    "path": "/auth/:provider",
+    "roles": [
+      {
+        "role": "guest",
+        "methods": ["POST"]
+      }
+    ]
+  },
+  {
+    "path": "/auth/:provider/register",
+    "roles": [
+      {
+        "role": "guest",
+        "methods": ["PUT"]
+      }
+    ]
+  },
+  {
+    "path": "/auth/logout",
+    "roles": [
+      {
+        "role": "admin",
+        "methods": ["DELETE"]
+      },
+      {
+        "role": "user",
+        "methods": ["DELETE"]
+      }
+    ]
+  },
+  {
+    "path": "/books",
+    "roles": [
+      {
+        "role": "admin",
+        "methods": ["POST", "DELETE", "PUT", "GET"]
+      }
+    ]
+  },
+  {
+    "path": "/books/:id",
+    "roles": [
+      {
+        "role": "admin",
+        "methods": ["POST", "DELETE", "PUT", "GET"]
+      },
+      {
+        "role": "user",
+        "methods": ["GET"]
+      }
+    ]
+  }
+]
