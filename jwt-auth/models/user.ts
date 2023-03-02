@@ -9,9 +9,17 @@ interface User {
   role: string;
 }
 
+interface SanitizedUser {
+  username: string;
+  email: string;
+  role: string;
+}
+
 // Define the user document interface (extends the user interface and adds the id and timestamps properties)
 export interface UserDocument extends User, Document {
   logProperties(): void;
+  getUserProperties(): User;
+  sanitize(): SanitizedUser;
 }
 
 // Define the user model interface (extends the user interface and adds static methods)
@@ -62,7 +70,23 @@ userSchema.statics.findByEmailAndPassword = async function (
   if (!isPasswordValid) {
     throw new Error("Invalid password");
   }
+
   return user;
+};
+
+// create method that returns the user properties
+userSchema.methods.getUserProperties = function (): User {
+  return {
+    username: this.username,
+    email: this.email,
+    role: this.role,
+    password: this.password,
+  };
+};
+
+userSchema.methods.sanitize = function (): SanitizedUser {
+  const { password, ...rest } = this.toJSON();
+  return rest;
 };
 
 userSchema.methods.logProperties = function (): void {

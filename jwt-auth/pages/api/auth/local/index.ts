@@ -5,6 +5,7 @@ import { setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextHandler } from "next-connect";
 import stringHelpers from "app/helpers/strings";
+import mongoose from "mongoose";
 
 const validate = (
   req: NextApiRequest,
@@ -34,7 +35,9 @@ const login = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const user = await User.findByEmailAndPassword(email, password).catch(
       (err) => {
-        return res.status(400).json({ message: err.message });
+        return res
+          .status(400)
+          .json({ message: (err as mongoose.Error.ValidationError).errors });
       }
     );
 
@@ -53,7 +56,7 @@ const login = async (req: NextApiRequest, res: NextApiResponse) => {
       maxAge: parseInt(process.env.COOKIE_EXPIRE || "86400"),
     });
 
-    res.status(200).json(user);
+    res.status(200).json(user.sanitize());
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }

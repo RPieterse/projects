@@ -5,6 +5,7 @@ import { setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import stringHelpers from "app/helpers/strings";
 import { NextHandler } from "next-connect";
+import mongoose from "mongoose";
 
 const validate = (
   req: NextApiRequest,
@@ -32,8 +33,15 @@ const register = async (req: NextApiRequest, res: NextApiResponse) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.create({ email, password }).catch((err) => {
-      return res.status(400).json({ message: err.message });
+    const user = await User.create({
+      email,
+      password,
+      username: email.split("@")[0],
+      role: "user",
+    }).catch((err) => {
+      return res
+        .status(400)
+        .json({ message: (err as mongoose.Error.ValidationError).errors });
     });
     if (!user) {
       return res.status(400).json({ message: "User not created" });
@@ -50,7 +58,7 @@ const register = async (req: NextApiRequest, res: NextApiResponse) => {
       maxAge: parseInt(process.env.COOKIE_EXPIRE || "86400"),
     });
 
-    res.status(200).json(user);
+    res.status(200).json(user.sanitize());
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }

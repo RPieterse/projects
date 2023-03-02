@@ -46,7 +46,7 @@ export default (config?: {
 
   // Connect to database
   if (useMemoryDb) {
-    _h.use(() => db.connect("memory"));
+    _h.use(() => db.connectMemoryDb());
   } else {
     _h.use(() => db.connect());
   }
