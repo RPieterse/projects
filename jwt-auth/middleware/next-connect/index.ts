@@ -5,7 +5,7 @@ import handlePermissions from "@root/middleware/permissions/handlePermissions";
 import db from "@root/database/index";
 import "@root/middleware/passport/jwt";
 
-const handler = (options: Options<NextApiRequest, NextApiResponse>) =>
+export const handler = (options: Options<NextApiRequest, NextApiResponse>) =>
   nc<NextApiRequest, NextApiResponse>(options);
 
 export default (config?: {

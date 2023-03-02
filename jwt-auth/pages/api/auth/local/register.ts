@@ -7,7 +7,7 @@ import stringHelpers from "@root/helpers/strings";
 import { NextHandler } from "next-connect";
 import mongoose from "mongoose";
 
-const validate = (
+export const validate = (
   req: NextApiRequest,
   res: NextApiResponse,
   next: NextHandler
@@ -29,7 +29,7 @@ const validate = (
   }
 };
 
-const register = async (req: NextApiRequest, res: NextApiResponse) => {
+export const register = async (req: NextApiRequest, res: NextApiResponse) => {
   const { email, password } = req.body;
   const user = await User.create({
     email,

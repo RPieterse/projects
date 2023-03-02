@@ -114,7 +114,8 @@ userSchema.pre<UserDocument>("save", async function (next) {
 });
 
 // Export the model if it exists, otherwise create the model and then export it
-// TODO: Error -> Can not find methods on model
-
-export default (models.User as Model<UserDocument, UserModel>) ||
+const User =
+  (models.User as UserModel) ||
   model<UserDocument, UserModel>("User", userSchema);
+
+export default User;
