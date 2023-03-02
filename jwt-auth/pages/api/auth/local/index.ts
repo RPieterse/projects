@@ -1,10 +1,10 @@
-import handler from "app/middleware/next-connect";
-import User from "app/models/user";
+import handler from "@root/middleware/next-connect";
+import User from "@root/models/user";
 import jwt from "jsonwebtoken";
 import { setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextHandler } from "next-connect";
-import stringHelpers from "app/helpers/strings";
+import stringHelpers from "@root/helpers/strings";
 import mongoose from "mongoose";
 
 const validate = (
@@ -62,4 +62,4 @@ const login = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 };
 
-handler({ validate }).post(login);
+handler().post(login);

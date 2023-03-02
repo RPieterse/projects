@@ -28,6 +28,8 @@ async function disconnect() {
 }
 
 async function connectMemoryDb() {
+  if (mongoMemory) return;
+  if (mongoose.connection.readyState >= 1) return;
   mongoMemory = await MongoMemoryServer.create();
   const uri = mongoMemory.getUri();
   await mongoose.connect(uri);

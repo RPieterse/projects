@@ -1,8 +1,9 @@
-import db from "../../../database/index";
+import db from "@root/database";
 // import mongoose from "mongoose";
 
 describe("Books", () => {
-  let jwt;
+  let jwt: string = "";
+
   beforeAll(async () => {
     await db.connectMemoryDb();
     // register user and set jwt

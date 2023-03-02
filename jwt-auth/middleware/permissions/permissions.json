@@ -1,6 +1,6 @@
 [
   {
-    "path": "/auth/:provider",
+    "path": "auth/local",
     "roles": [
       {
         "role": "guest",
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "path": "/auth/:provider/register",
+    "path": "auth/local/register",
     "roles": [
       {
         "role": "guest",
@@ -18,7 +18,7 @@
     ]
   },
   {
-    "path": "/auth/logout",
+    "path": "auth/logout",
     "roles": [
       {
         "role": "admin",
@@ -31,7 +31,7 @@
     ]
   },
   {
-    "path": "/books",
+    "path": "books",
     "roles": [
       {
         "role": "admin",
@@ -40,7 +40,7 @@
     ]
   },
   {
-    "path": "/books/:id",
+    "path": "books/:id",
     "roles": [
       {
         "role": "admin",

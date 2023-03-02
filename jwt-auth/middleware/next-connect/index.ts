@@ -1,8 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import nc, { NextHandler, Options } from "next-connect";
 import passport from "passport";
-import handlePermissions from "app/middleware/permissions/handlePermissions";
-import db from "app/database/index";
+import handlePermissions from "@root/middleware/permissions/handlePermissions";
+import db from "@root/database/index";
+import "@root/middleware/passport/jwt";
 
 const handler = (options: Options<NextApiRequest, NextApiResponse>) =>
   nc<NextApiRequest, NextApiResponse>(options);
@@ -10,7 +11,6 @@ const handler = (options: Options<NextApiRequest, NextApiResponse>) =>
 export default (config?: {
   options?: Options<NextApiRequest, NextApiResponse>;
   authentication?: "jwt";
-  useMemoryDb?: boolean;
   validate?: (
     req: NextApiRequest,
     res: NextApiResponse,
@@ -23,8 +23,7 @@ export default (config?: {
   ) => void)[];
 }) => {
   // Destructure config object
-  const { options, authentication, useMemoryDb, validate, middleware } =
-    config || {};
+  const { options, authentication, validate, middleware } = config || {};
 
   // This is the handler that is returned from this function with default options
   const _h = handler({
@@ -45,19 +44,49 @@ export default (config?: {
   }
 
   // Connect to database
-  if (useMemoryDb) {
-    _h.use(() => db.connectMemoryDb());
+  if (process.env.USE_MEMORY_DB === "true") {
+    _h.use(
+      async (_1: NextApiRequest, _2: NextApiResponse, next: NextHandler) => {
+        await db.connectMemoryDb();
+        next();
+      }
+    );
   } else {
-    _h.use(() => db.connect());
+    _h.use(
+      async (_1: NextApiRequest, res: NextApiResponse, next: NextHandler) => {
+        try {
+          await db.connect();
+          next();
+        } catch (err) {
+          console.log(err);
+          res.status(500).json({ error: "Something went wrong on our side!" });
+        }
+      }
+    );
   }
 
   // Authenticate request
   if (authentication) {
-    _h.use(passport.authenticate(authentication, { session: false }));
+    _h.use(
+      async (req: NextApiRequest, _2: NextApiResponse, next: NextHandler) => {
+        if (
+          req.headers?.authorization &&
+          req.headers?.authorization.startsWith("Bearer ")
+        ) {
+          _h.use(passport.authenticate(authentication, { session: false }));
+        }
+        if (req.cookies?.auth_token) {
+          _h.use(
+            passport.authenticate(authentication, {
+              session: false,
+            })
+          );
+        }
+        next();
+      }
+    );
+    _h.use(handlePermissions);
   }
-
-  // Handle permissions
-  _h.use(handlePermissions);
 
   // Validate request body
   if (typeof validate === "function") {

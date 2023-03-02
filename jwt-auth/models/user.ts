@@ -1,4 +1,4 @@
-import { Document, Model, model, Schema } from "mongoose";
+import { Document, Model, model, Schema, models } from "mongoose";
 import bcrypt from "bcrypt";
 
 // Define the user interface
@@ -13,6 +13,7 @@ interface SanitizedUser {
   username: string;
   email: string;
   role: string;
+  id: string;
 }
 
 // Define the user document interface (extends the user interface and adds the id and timestamps properties)
@@ -23,11 +24,12 @@ export interface UserDocument extends User, Document {
 }
 
 // Define the user model interface (extends the user interface and adds static methods)
-interface UserModel extends Model<UserDocument> {
+export interface UserModel extends Model<UserDocument> {
   findByEmailAndPassword(
     email: string,
     password: string
-  ): Promise<UserDocument>;
+  ): Promise<UserDocument | null>;
+  isDuplicateEmail(email: string): Promise<boolean>;
 }
 
 // Define the user schema
@@ -74,9 +76,18 @@ userSchema.statics.findByEmailAndPassword = async function (
   return user;
 };
 
+// Add method to check if an user with the given email exists
+userSchema.statics.isDuplicateEmail = async function (
+  email: string
+): Promise<boolean> {
+  const user = await this.findOne({ email }).exec();
+  return !!user;
+};
+
 // create method that returns the user properties
 userSchema.methods.getUserProperties = function (): User {
   return {
+    ...this,
     username: this.username,
     email: this.email,
     role: this.role,
@@ -85,7 +96,8 @@ userSchema.methods.getUserProperties = function (): User {
 };
 
 userSchema.methods.sanitize = function (): SanitizedUser {
-  const { password, ...rest } = this.toJSON();
+  const { password, _id, ...rest } = this.toJSON();
+  rest.id = _id;
   return rest;
 };
 
@@ -101,7 +113,8 @@ userSchema.pre<UserDocument>("save", async function (next) {
   next();
 });
 
-// Define the user model
-const User = model<UserDocument, UserModel>("User", userSchema);
+// Export the model if it exists, otherwise create the model and then export it
+// TODO: Error -> Can not find methods on model
 
-export default User;
+export default (models.User as Model<UserDocument, UserModel>) ||
+  model<UserDocument, UserModel>("User", userSchema);

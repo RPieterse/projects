@@ -1,5 +1,5 @@
-import withHeader from "app/components/withHeader";
-import styles from "app/styles/index.module.css";
+import withHeader from "@root/components/withHeader";
+import styles from "@root/styles/index.module.css";
 
 function Home() {
   return (

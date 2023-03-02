@@ -1,5 +1,5 @@
 // import the string helpers file
-import helpers from "../../helpers/strings";
+import helpers from "@root/helpers/strings";
 
 // test isEmail from helpers.isEmail
 describe("helpers.isEmail", () => {

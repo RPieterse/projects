@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { UserDocument } from "app/models/user";
+import { UserDocument } from "@root/models/user";
 import { NextHandler } from "next-connect";
 
 interface ExtendedRequest extends NextApiRequest {
@@ -20,12 +20,14 @@ export default (
     req.headers.host
   }`;
   const requestUrl = new URL(req.url!, requestBase);
+  const testPath = requestUrl.pathname.split("/").slice(2).join("/");
+
   const permissions =
-    require("app/middleware/permissions/permissions.json") as PermissionModel[];
+    require("@root/middleware/permissions/permissions.json") as PermissionModel[];
 
   // get permission for current request
   const permission = permissions.find(
-    (p: PermissionModel) => p.path === requestUrl.pathname
+    (p: PermissionModel) => p.path === testPath
   );
 
   // if user is not logged in
@@ -39,7 +41,12 @@ export default (
         return next();
       }
     }
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(403).json({
+      message: "Not Authorized",
+      data: JSON.stringify({
+        permission,
+      }),
+    });
   }
 
   // if user is logged in check if path includes user role and method is allowed
@@ -51,5 +58,10 @@ export default (
     return next();
   }
 
-  return res.status(401).json({ message: "Unauthorized" });
+  return res.status(402).json({
+    message: "Not Authorized",
+    data: JSON.stringify({
+      permission,
+    }),
+  });
 };
