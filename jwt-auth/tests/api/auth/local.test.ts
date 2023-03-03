@@ -200,7 +200,7 @@ describe("Auth Flow", () => {
 
         // check if the response is a json object with correct data
         expect(res._getJSONData()).toEqual({
-          error: "Invalid email address",
+          error: "User not found",
         });
       });
       // test wrong password
@@ -208,7 +208,7 @@ describe("Auth Flow", () => {
         const { req, res } = createMocks({
           method: "POST",
           body: {
-            email: "unregistered@test.com",
+            email: "test@test.com",
             password: "wrongpassword",
           },
         });
@@ -223,7 +223,7 @@ describe("Auth Flow", () => {
 
         // check if the response is a json object with correct data
         expect(res._getJSONData()).toEqual({
-          error: "Invalid email address",
+          error: "Password not correct",
         });
       });
       // test invalid email

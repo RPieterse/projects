@@ -66,11 +66,11 @@ userSchema.statics.findByEmailAndPassword = async function (
 ): Promise<UserDocument> {
   const user = await this.findOne({ email });
   if (!user) {
-    throw new Error("Invalid email address");
+    throw new Error("User not found");
   }
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new Error("Invalid password");
+    throw new Error("Password not correct");
   }
 
   return user;

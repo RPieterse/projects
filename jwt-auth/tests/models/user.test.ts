@@ -69,7 +69,7 @@ describe("User Model", () => {
     };
     await User.findByEmailAndPassword(userObj.email, "wrongPassword").catch(
       (error: Error) => {
-        expect(error.message).toBe("Invalid password");
+        expect(error.message).toBe("Password not correct");
       }
     );
   });

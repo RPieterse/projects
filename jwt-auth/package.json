@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "jest-watch": "npx jest --watch",
+    "jest": "npx jest",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
