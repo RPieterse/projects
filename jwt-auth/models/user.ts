@@ -96,7 +96,7 @@ userSchema.methods.getUserProperties = function (): User {
 };
 
 userSchema.methods.sanitize = function (): SanitizedUser {
-  const { password, _id, ...rest } = this.toJSON();
+  const { password, _id, __v, ...rest } = this.toJSON();
   rest.id = _id;
   return rest;
 };

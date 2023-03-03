@@ -5,9 +5,8 @@ import { setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextHandler } from "next-connect";
 import stringHelpers from "@root/helpers/strings";
-import mongoose from "mongoose";
 
-const validate = (
+export const validate = (
   req: NextApiRequest,
   res: NextApiResponse,
   next: NextHandler
@@ -15,13 +14,13 @@ const validate = (
   switch (req.method?.toLowerCase()) {
     case "post":
       if (!req.body.email || !req.body.password) {
-        return res.status(400).json({ message: "Email and password required" });
+        return res.status(400).json({ error: "Email and password required" });
       }
       if (!stringHelpers.isEmail(req.body.email)) {
-        return res.status(400).json({ message: "Email is invalid" });
+        return res.status(400).json({ error: "Email is invalid" });
       }
       if (!stringHelpers.isValidPassword(req.body.password)) {
-        return res.status(400).json({ message: "Password is invalid" });
+        return res.status(400).json({ error: "Password is invalid" });
       }
       return next();
     default:
@@ -29,20 +28,14 @@ const validate = (
   }
 };
 
-const login = async (req: NextApiRequest, res: NextApiResponse) => {
+export const login = async (req: NextApiRequest, res: NextApiResponse) => {
   // login user with email and password using the findByEmailAndPassword method from the user model and return the user and jwt token as n http only cookie
   const { email, password } = req.body;
   try {
-    const user = await User.findByEmailAndPassword(email, password).catch(
-      (err) => {
-        return res
-          .status(400)
-          .json({ message: (err as mongoose.Error.ValidationError).errors });
-      }
-    );
+    const user = await User.findByEmailAndPassword(email, password);
 
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ error: "User not found" });
     }
     // create jwt token using jwt
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, {
@@ -58,8 +51,8 @@ const login = async (req: NextApiRequest, res: NextApiResponse) => {
 
     res.status(200).json(user.sanitize());
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ error: err.message });
   }
 };
 
-handler().post(login);
+export default handler({ validate, authentication: "jwt" }).post(login);

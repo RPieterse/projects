@@ -85,6 +85,7 @@ export default (config?: {
         next();
       }
     );
+
     _h.use(handlePermissions);
   }
 
