@@ -12,23 +12,28 @@ http.interceptors.request.use((req) => {
   return req;
 });
 
-http.interceptors.response.use((res) => {
-  if (res.status === 400) {
-    console.log("Bad request");
+http.interceptors.response.use(
+  (res) => {
+    return res;
+  },
+  (err) => {
+    if (err.response.status === 400) {
+      console.log("Bad request");
+    }
+    if (err.response.status === 401) {
+      console.log("Unauthorized");
+    }
+    if (err.response.status === 403) {
+      console.log("Forbidden");
+    }
+    if (err.response.status === 404) {
+      console.log("Not found");
+    }
+    if (err.response.status === 500) {
+      console.log("Internal server error");
+    }
+    return Promise.reject(err);
   }
-  if (res.status === 401) {
-    console.log("Unauthorized");
-  }
-  if (res.status === 403) {
-    console.log("Forbidden");
-  }
-  if (res.status === 404) {
-    console.log("Not found");
-  }
-  if (res.status === 500) {
-    console.log("Internal server error");
-  }
-  return res;
-});
+);
 
 export default http;
