@@ -46,13 +46,21 @@ function Index() {
   const authSwitcher = useMemo(() => {
     if (auth === "Login") {
       return (
-        <a className="auth-switch" href="#" onClick={() => setAuth("Register")}>
+        <a
+          className="btn-text text-center flex"
+          href="#"
+          onClick={() => setAuth("Register")}
+        >
           Register Instead ?
         </a>
       );
     } else {
       return (
-        <a className="auth-switch" href="#" onClick={() => setAuth("Login")}>
+        <a
+          className="btn-text text-center flex"
+          href="#"
+          onClick={() => setAuth("Login")}
+        >
           Login Instead ?
         </a>
       );

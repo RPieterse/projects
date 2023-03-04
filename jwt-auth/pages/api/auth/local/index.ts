@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { setCookie } from "cookies-next";
 import { NextApiRequest, NextApiResponse } from "next";
 import { NextHandler } from "next-connect";
-import stringHelpers from "@root/helpers/strings";
+import { isEmail, isValidPassword } from "@root/helpers/strings";
 
 export const validate = (
   req: NextApiRequest,
@@ -16,10 +16,10 @@ export const validate = (
       if (!req.body.email || !req.body.password) {
         return res.status(400).json({ error: "Email and password required" });
       }
-      if (!stringHelpers.isEmail(req.body.email)) {
+      if (!isEmail(req.body.email)) {
         return res.status(400).json({ error: "Email is invalid" });
       }
-      if (!stringHelpers.isValidPassword(req.body.password)) {
+      if (!isValidPassword(req.body.password)) {
         return res.status(400).json({ error: "Password is invalid" });
       }
       return next();

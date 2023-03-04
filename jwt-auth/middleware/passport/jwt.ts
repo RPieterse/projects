@@ -8,7 +8,6 @@ import User from "@root/models/user";
 
 interface JwtPayload {
   id: string;
-  // Add any other properties from your JWT payload here
 }
 
 const cookieExtractor: JwtFromRequestFunction = (req: any) => {

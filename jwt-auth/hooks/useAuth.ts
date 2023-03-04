@@ -38,7 +38,7 @@ export default function useAuth() {
     //login logic
     try {
       const res = await http({
-        method: "PUT",
+        method: "DELETE",
         url: "/api/auth/logout",
       });
       cb(null, res.data);

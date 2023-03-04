@@ -1,6 +1,9 @@
+/** GLOBAL **/
+
 :root {
     --secondary: #f1c40f;
     --secondary-accent: #f39c12;
+        --error: red;
 }
 
 body {
@@ -22,6 +25,14 @@ h1 {
     user-select: none;
     color: whitesmoke;
 }
+
+p {
+    color: whitesmoke;
+    text-align: center;
+}
+
+
+/** FORMS **/
 
 form {
     display: flex;
@@ -47,19 +58,51 @@ form > input {
     color: white;
 }
 
-.auth-switch {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
+form > input:invalid {
+    border: var(--error) 1px solid;
+    border-radius: 6px;
+    position: relative;
+}
+
+form>div.invalid-field {
+    position: relative;
+}
+form > div.invalid-field::after {
+    content: attr(data-error-message);
+    color: var(--error);
+    position: absolute;
+    display: block;
+    top: -8px;
+    left: 0;
+}
+
+/** UTILS **/
+
+.btn-text{
     padding: 1rem;
     cursor: pointer;
     color: white;
-    margin-top: 1rem;
+    text-decoration: none;
+} 
+
+.text-center{
+    justify-content: center;
+    text-align: center;
 }
 
-.auth-switch:hover,:active {
+.flex {
+    display: flex;   
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.btn-text:hover,:active {
     color: var(--secondary);
 }
+
+/** BUTTONS **/
 
 button {
     color: white;
