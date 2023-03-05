@@ -12,4 +12,7 @@ module.exports = {
     "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/tests/__mocks__/fileMock.js",
     ...moduleNameMapperConfig,
   },
+  transform: {
+    "^.+\\.(ts|tsx|js|jsx)$": "ts-jest",
+  },
 };

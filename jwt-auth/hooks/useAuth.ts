@@ -1,11 +1,15 @@
-import { IAuthCallback } from "@root/types/auth.types";
 import http from "@root/utils/http";
 
+export interface IAuthCallback {
+  (error: string | null, data: any): void;
+}
+
+export interface IAuthCredentials {
+  email: string;
+  password: string;
+}
 export default function useAuth() {
-  const login = async (
-    credentials: { email: string; password: string },
-    cb: IAuthCallback
-  ) => {
+  const login = async (credentials: IAuthCredentials, cb: IAuthCallback) => {
     try {
       const res = await http({
         method: "POST",
@@ -18,10 +22,7 @@ export default function useAuth() {
     }
   };
 
-  const register = async (
-    credentials: { email: string; password: string },
-    cb: IAuthCallback
-  ) => {
+  const register = async (credentials: IAuthCredentials, cb: IAuthCallback) => {
     try {
       const res = await http({
         method: "PUT",

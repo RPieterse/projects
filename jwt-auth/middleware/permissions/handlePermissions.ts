@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { UserDocument } from "@root/models/user";
 import { NextHandler } from "next-connect";
-import { PermissionModel } from "@root/types/permissions";
 
-interface ExtendedRequest extends NextApiRequest {
+export interface PermissionModel {
+  path: string;
+  roles: { role: string; methods: string[] }[];
+}
+export interface ExtendedRequest extends NextApiRequest {
   user?: UserDocument;
 }
 

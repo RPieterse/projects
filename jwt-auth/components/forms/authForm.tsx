@@ -1,6 +1,6 @@
+import { IAuthCredentials } from "@root/hooks/useAuth";
 import ValidateInputs from "@root/utils/validateInputs";
 import { useCallback } from "react";
-import { IAuthCredentials } from "../../types/auth.types";
 
 interface AuthFormProps {
   text: string;
