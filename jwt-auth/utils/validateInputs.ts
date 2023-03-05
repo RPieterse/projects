@@ -1,9 +1,21 @@
 import {
-  ValidationErrors,
-  ValidationItem,
+  isEmail,
+  isValidPassword,
+  isRequired,
   ValidationTypes,
-} from "@root/types/validations";
-import { isEmail, isValidPassword, isRequired } from "@root/helpers/strings";
+} from "@root/helpers/strings";
+
+export type ValidationErrors = {
+  name: string;
+  validation: string;
+  message: string;
+};
+
+export type ValidationItem = {
+  inputName: string;
+  validation: ValidationTypes[];
+  errorMessage: string;
+};
 
 export default class ValidateInputs {
   constructor(private formId: string, private validations: ValidationItem[]) {}
@@ -59,18 +71,32 @@ export default class ValidateInputs {
     input.setCustomValidity("Invalid field.");
   }
 
-  validateField(inputName: string, cb?: (passed: boolean) => void) {
-    const errors: ValidationErrors[] = [];
+  private getValidationItem(inputName: string) {
+    return this.validations.find((i) => i.inputName === inputName);
+  }
+
+  private cleanup(inputName: string) {
+    const formEl = document.getElementById(this.formId) as HTMLFormElement;
+    formEl.querySelector(`div[data-field="${inputName}"]`)?.remove();
+  }
+
+  private getInputAndValue(inputName: string): [HTMLInputElement, string] {
     const formEl = document.getElementById(this.formId) as HTMLFormElement;
     const input = formEl.querySelector(
       `input[name='${inputName}']`
     ) as HTMLInputElement;
-    const value = input.value;
-    const item = this.validations.find((i) => i.inputName === inputName);
-    // cleanup
-    formEl.querySelector(`div[data-field="${item?.inputName}"]`)?.remove();
     input.setCustomValidity("");
+    const value = input.value;
+    return [input, value];
+  }
+
+  validateField(inputName: string, cb?: (passed: boolean) => void) {
+    const item = this.getValidationItem(inputName);
+    // cleanup
     if (item) {
+      const errors: ValidationErrors[] = [];
+      this.cleanup(inputName);
+      const [input, value] = this.getInputAndValue(inputName);
       item.validation.forEach((i) => {
         this.checkValidations(i, value, errors, item, ["isRequired"]);
       });
@@ -89,32 +115,25 @@ export default class ValidateInputs {
   }
 
   validate(cb?: (passed: boolean, errors: ValidationErrors[]) => void) {
-    const formEl = document.getElementById(this.formId) as HTMLFormElement;
-    formEl.querySelectorAll('div[class="invalid-field"]').forEach((el) => {
-      el.remove();
-    });
-
     let hasPassedAll = true;
     const allErrors: ValidationErrors[] = [];
 
     this.validations.forEach((item) => {
       const errors: ValidationErrors[] = [];
-
-      const input = formEl.querySelector(
-        `input[name='${item.inputName}']`
-      ) as HTMLInputElement;
+      const [input, value] = this.getInputAndValue(item.inputName);
 
       // cleanup
 
       if (input) {
         // get value of input
-        const value = input.value;
+        this.cleanup(item.inputName);
+
         item.validation.forEach((i) => {
           this.checkValidations(i, value, errors, item);
         });
       }
 
-      // set data-error-message on input
+      // set data-field on input
       if (errors.length > 0) {
         hasPassedAll = false;
         this.createErrorDiv(input, item);
