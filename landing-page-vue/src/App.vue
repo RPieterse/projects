@@ -1,28 +1,62 @@
 <template>
   <div>
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+    <header>
+      <app-header />
+    </header>
+    <main>
+      <section id="featured">
+        <featured />
+      </section>
+      <section id="cta">
+        <cta />
+      </section>
+      <section id="recent-articles">
+        <recent-articles />
+      </section>
+      <section id="all-articles">
+        <all-articles />
+      </section>
+      <section id="authors">
+        <authors />
+      </section>
+    </main>
+    <footer>
+      <app-footer />
+    </footer>
   </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
-
+import AllArticles from "./components/AllArticles.vue";
+import AppFooter from "./components/AppFooter.vue";
+import AppHeader from "./components/AppHeader.vue";
+import Authors from "./components/Authors.vue";
+import Cta from "./components/Cta.vue";
+import Featured from "./components/Featured.vue";
+import RecentArticles from "./components/RecentArticles.vue";
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    AppHeader,
+    Featured,
+    Cta,
+    AllArticles,
+    Authors,
+    AppFooter,
+    RecentArticles,
   },
 };
 </script>
 
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+@import "./assets/scss/utils.scss";
+@import "./assets/scss/global.scss";
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+section {
+  position: relative;
 }
 </style>
