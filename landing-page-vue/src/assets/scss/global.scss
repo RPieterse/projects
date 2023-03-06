@@ -15,6 +15,12 @@
             background-color: transparent
         }
     }
+    &--secondary {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+        color: $primary;
+        border: 1px $primary solid;
+    }
 }
 
 a.btn {
