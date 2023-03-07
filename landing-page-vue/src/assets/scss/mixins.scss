@@ -4,9 +4,9 @@
   justify-content: space-around;
 }
 
-@mixin line-clamp-2 {
+@mixin truncate($max-lines) {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: $max-lines;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

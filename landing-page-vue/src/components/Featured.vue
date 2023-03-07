@@ -28,37 +28,80 @@ export default {
 @import "@/assets/scss/variables.scss";
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   grid-gap: 1rem;
-  margin: 0 auto;
   padding-inline: $app-padding;
-  max-height: 1000px;
-  @media only screen and (max-width: 756px) {
-    grid-template-columns: repeat(1, 1fr);
-  }
-  @media only screen and (max-width: 1560px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
 
   div:nth-child(1) {
-    grid-row: 1 / 4;
+    grid-row: 1/8;
   }
   div:nth-child(4) {
-    grid-row-start: span 2;
+    grid-row: 8/9;
   }
 
   div:nth-child(2) {
-    grid-row-start: span 1;
+    grid-row: 1/4;
   }
   div:nth-child(5) {
-    grid-row: 2 / 6;
+    grid-row: 4/9;
   }
 
   div:nth-child(3) {
-    grid-row-start: span 2;
+    grid-row: 1/5;
   }
   div:nth-child(6) {
-    grid-row: 3 / 6;
+    grid-row: 5/9;
+  }
+
+  @media (max-width: 1290px) {
+    grid-template-columns: repeat(2, 1fr);
+
+    div:nth-child(1) {
+      grid-row: span 4;
+    }
+    div:nth-child(4) {
+      grid-row: 6/8;
+      grid-column: 1/-1;
+    }
+
+    div:nth-child(2) {
+      grid-row: span 2;
+    }
+    div:nth-child(5) {
+      grid-row: auto;
+    }
+
+    div:nth-child(3) {
+      grid-row: span 2;
+    }
+    div:nth-child(6) {
+      grid-row: auto;
+    }
+  }
+
+  @media (max-width: 859px) {
+    grid-template-columns: repeat(1, 1fr);
+    div:nth-child(1) {
+      grid-row: span 4;
+    }
+    div:nth-child(4) {
+      grid-row: auto;
+    }
+
+    div:nth-child(2) {
+      grid-row: span 2;
+    }
+    div:nth-child(5) {
+      grid-row: auto;
+    }
+
+    div:nth-child(3) {
+      grid-row: span 2;
+    }
+    div:nth-child(6) {
+      grid-row: auto;
+    }
   }
 }
 </style>

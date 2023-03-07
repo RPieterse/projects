@@ -11,6 +11,7 @@
 
       <button class="btn btn--primary">Contact us</button>
     </ul>
+    <span><i class="fas fa-bars"></i></span>
   </nav>
 </template>
 
@@ -34,6 +35,7 @@ export default {
 
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
+@import "@/assets/scss/mixins.scss";
 nav {
   height: $nav-height;
   display: flex;
@@ -53,9 +55,36 @@ ul {
   }
 }
 
+span {
+  display: none;
+  i {
+    cursor: pointer;
+    position: relative;
+    color: white;
+
+    &:hover {
+      color: $primary;
+      z-index: 1;
+      &::after {
+        content: "";
+        @include absolute-center;
+        width: 3rem;
+        height: 3rem;
+        background: white;
+        transition: all 0.3s ease;
+        border-radius: 50%;
+        z-index: -1;
+      }
+    }
+  }
+}
+
 @media screen and (max-width: 1100px) {
   ul {
     display: none;
+  }
+  span {
+    display: block;
   }
 }
 </style>

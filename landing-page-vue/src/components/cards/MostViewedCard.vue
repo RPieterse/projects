@@ -91,7 +91,7 @@ export default {
       color: $text-light;
     }
     &__title {
-      @include line-clamp-2;
+      @include truncate(2);
       font-size: 1.6rem;
       font-weight: 400;
       color: $text-light;

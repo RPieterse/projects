@@ -34,10 +34,6 @@ export default {
         };
       },
     },
-    dark: {
-      type: Boolean,
-      default: false,
-    },
   },
 };
 </script>
@@ -45,7 +41,7 @@ export default {
 <style lang="scss" scoped>
 @import "@/assets/scss/variables.scss";
 .card {
-  background: $light;
+  background: rgb(245, 245, 245);
   &__image {
     width: 100%;
     height: 200px;
@@ -75,7 +71,7 @@ export default {
     }
     &__description {
       font-size: 0.9rem;
-      color: $text-secondary;
+      color: $text-dark;
       margin-bottom: 1rem;
     }
     button {

@@ -43,7 +43,7 @@ export default {
 .card {
   background: linear-gradient(
     to top right,
-    $primary-light 1%,
+    $primary-light 50%,
     $accent 75%,
     $primary-light 100%
   );
@@ -94,7 +94,7 @@ export default {
       }
     }
     &__text {
-      @include line-clamp-2;
+      @include truncate(2);
       font-size: 1.2rem;
       font-weight: 400;
       color: $text-light;
