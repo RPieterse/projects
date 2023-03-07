@@ -1,48 +1,80 @@
-@import './variables.scss';
+@import "./variables.scss";
 
 .btn {
-    border-radius: 25px;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    &--primary {
-        padding: 0.5rem 1rem;
-        background-color: rgba(255, 255, 255, 0.25);
-        color: #fff;
-        border: 1px white solid;
-        transition: all 0.1s ease-in-out;
-        &:hover{
-            background-color: transparent
-        }
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  &--primary {
+    padding: 0.5rem 1rem;
+    background-color: rgba($dark, 0.25);
+    color: $text-light;
+    border: 1px $light solid;
+    transition: all 0.1s ease-in-out;
+    &:hover {
+      background-color: transparent;
     }
-    &--secondary {
-        padding: 0.5rem 1rem;
-        background-color: transparent;
-        color: $primary;
-        border: 1px $primary solid;
-    }
+  }
+  &--secondary {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    color: $primary;
+    border: 1px $primary solid;
+  }
 }
 
 a.btn {
-    text-decoration: none;
-    color: #fff;
-    font-size: 1.1rem;
-    align-items: center;
-    display: flex;
-    gap: 9px;
-    position: relative;
+  text-decoration: none;
+  color: $text-light;
+  font-size: 1.1rem;
+  align-items: center;
+  display: flex;
+  gap: 9px;
+  position: relative;
 
-    &:hover {
-        &:after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 30px;
-            width: 100%;
-            height: 3px;
-            background-color: white;
-        }
+  &:hover {
+    &:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 30px;
+      width: 100%;
+      height: 3px;
+      background-color: $light;
     }
+  }
 }
 
+.tag {
+  text-transform: uppercase;
+  border-radius: 5px;
+  font-size: 12px;
+  text-align: right;
+  position: relative;
+  padding: 0.4rem 0.4rem;
+  color: $text-light;
+  &--light {
+    background: rgba($light, 0.25);
+  }
 
+  &--dark {
+    background: rgba($dark, 0.25);
+  }
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 10px;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 0 10px rgba($dark, 0.1);
+  transition: all 0.3s ease-in-out;
+  &:hover {
+    box-shadow: 0 0 10px rgba($dark, 0.2);
+  }
+}

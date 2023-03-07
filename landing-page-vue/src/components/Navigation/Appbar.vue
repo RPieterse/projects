@@ -52,4 +52,10 @@ ul {
     margin-inline: 20px;
   }
 }
+
+@media screen and (max-width: 1100px) {
+  ul {
+    display: none;
+  }
+}
 </style>

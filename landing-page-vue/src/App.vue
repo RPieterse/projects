@@ -55,9 +55,13 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Oswald, sans-serif;
+  font-family: "Cabin", sans-serif;
 }
 section {
   position: relative;
+}
+
+#featured {
+  bottom: 200px;
 }
 </style>
