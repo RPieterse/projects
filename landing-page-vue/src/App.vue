@@ -64,4 +64,7 @@ section {
 #featured {
   bottom: 200px;
 }
+#cta {
+  bottom: 100px;
+}
 </style>
