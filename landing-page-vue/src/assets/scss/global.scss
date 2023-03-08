@@ -1,5 +1,30 @@
 @import "./variables.scss";
 
+h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0;
+  color: $text-dark;
+  cursor: default;
+}
+
+h2 {
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: $text-dark;
+  margin: 0;
+  cursor: default;
+}
+
+h3 {
+  font-size: 0.9rem;
+  color: $text-dark;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0;
+  cursor: default;
+}
+
 .btn {
   border-radius: 25px;
   border: none;
@@ -20,6 +45,9 @@
     background-color: transparent;
     color: $primary;
     border: 1px $primary solid;
+    &:hover {
+      background-color: rgba($dark, 0.1);
+    }
   }
 }
 
@@ -52,6 +80,7 @@ a.btn {
   text-align: right;
   position: relative;
   padding: 0.4rem 0.4rem;
+  cursor: default;
   color: $text-light;
   &--light {
     background: rgba($light, 0.25);

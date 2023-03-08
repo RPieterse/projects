@@ -12,12 +12,12 @@
       </div>
     </div>
     <div class="card__body">
-      <div class="card__body__tag">
+      <h3 class="card__body__tag">
         {{ item.tag }}
-      </div>
-      <div class="card__body__title">
+      </h3>
+      <h1 class="card__body__title">
         {{ item.title }}
-      </div>
+      </h1>
     </div>
   </div>
 </template>
@@ -86,14 +86,10 @@ export default {
     padding-inline: 1rem;
     padding-bottom: 1rem;
     &__tag {
-      font-size: 1rem;
-      font-weight: 600;
       color: $text-light;
     }
     &__title {
       @include truncate(2);
-      font-size: 1.6rem;
-      font-weight: 400;
       color: $text-light;
     }
   }

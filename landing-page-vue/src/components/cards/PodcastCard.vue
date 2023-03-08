@@ -6,11 +6,11 @@
         <span class="tag tag--light">podcast</span>
       </div>
     </div>
-    <div class="card__content">{{ item.description }}</div>
+    <h2 class="card__content">{{ item.description }}</h2>
     <div class="card__footer">
       <div class="card__footer__author">
-        <div class="card__footer__author__title">artist</div>
-        <div class="card__footer__author__name">{{ item.author.name }}</div>
+        <h3 class="card__footer__author__title">artist</h3>
+        <h2 class="card__footer__author__name">{{ item.author.name }}</h2>
       </div>
       <div class="card__footer__author_image">
         <img :src="item.author.profileImage" alt="author image" />
@@ -48,7 +48,7 @@ export default {
     $accent 75%,
     $primary-light 100%
   );
-
+  cursor: pointer;
   &__header {
     display: flex;
     justify-content: space-between;
@@ -62,8 +62,6 @@ export default {
   }
   &__content {
     padding: 1rem;
-    font-size: 1.2rem;
-    font-weight: 600;
     color: $text-light;
   }
   &__footer {
@@ -76,13 +74,9 @@ export default {
       flex-direction: column;
       gap: 6px;
       &__title {
-        font-size: 1rem;
         color: rgba($color: $text-light, $alpha: 0.8);
-        text-transform: uppercase;
       }
       &__name {
-        font-size: 1.2rem;
-        font-weight: 600;
         color: $text-light;
       }
     }

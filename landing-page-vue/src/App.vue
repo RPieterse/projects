@@ -56,6 +56,7 @@ body {
   padding: 0;
   box-sizing: border-box;
   font-family: "Cabin", sans-serif;
+  font-size: 0.9rem;
 }
 section {
   position: relative;

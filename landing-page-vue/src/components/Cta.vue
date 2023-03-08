@@ -1,9 +1,9 @@
 <template>
   <div class="cta">
-    <div class="cta__text">
+    <h1 class="cta__text">
       Join our resources and team by subscribing to out email list to get the
       latest updates!
-    </div>
+    </h1>
     <div class="cta__action">
       <span class="cta__action__input-container"
         ><input
@@ -30,15 +30,13 @@ export default {};
   padding-inline: $app-padding;
   justify-content: space-between;
   height: 100%;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 
   @media screen and (max-width: 859px) {
     flex-direction: column;
     justify-content: center;
   }
   .cta__text {
-    font-size: 1.5rem;
-    font-weight: 500;
     color: #333;
     text-align: left;
     margin-bottom: 1rem;

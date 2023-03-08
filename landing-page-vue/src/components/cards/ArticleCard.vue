@@ -10,8 +10,8 @@
     </div>
     <div class="card__content">
       <div>
-        <div class="card__content__tag">{{ item.tag }}</div>
-        <div class="card__content__title">{{ item.title }}</div>
+        <h3>{{ item.tag }}</h3>
+        <h1>{{ item.title }}</h1>
       </div>
       <div class="card__content__description">{{ item.description }}</div>
       <button class="btn btn--secondary">Read more</button>
@@ -58,19 +58,7 @@ export default {
     flex: 1;
     justify-content: space-around;
     padding: 1rem;
-    &__tag {
-      font-size: 0.8rem;
-      color: $primary;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    &__title {
-      font-size: 1.4rem;
-      font-weight: 600;
-      margin: 0.5rem 0;
-    }
     &__description {
-      font-size: 0.9rem;
       color: $text-dark;
       margin-bottom: 1rem;
     }

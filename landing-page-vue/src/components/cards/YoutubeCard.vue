@@ -11,9 +11,9 @@
         <img :src="item.img" alt="youtube preview image" />
         <i class="fas fa-play-circle"></i>
       </div>
-      <div class="card__body__text">
+      <h2 class="card__body__text">
         {{ item.description }}
-      </div>
+      </h2>
     </div>
   </div>
 </template>
@@ -95,8 +95,6 @@ export default {
     }
     &__text {
       @include truncate(2);
-      font-size: 1.2rem;
-      font-weight: 400;
       color: $text-light;
     }
   }
