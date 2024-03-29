@@ -3,17 +3,17 @@ import rough from "roughjs/bundled/rough.esm";
 
 const generator = rough.generator();
 
-function createElement(id, x1, y1, x2, y2, tool) {
+function createElement(id, x1, y1, x2, y2, type) {
 	const roughElement = {
 		id,
 		x1,
 		y1,
 		x2,
 		y2,
-		tool,
+		type,
 	};
 
-	switch (tool) {
+	switch (type) {
 		case "line":
 			roughElement["element"] = generator.line(x1, y1, x2, y2);
 			break;
@@ -32,25 +32,135 @@ function createElement(id, x1, y1, x2, y2, tool) {
 	return roughElement;
 }
 
-const isWithinElement = (element, x, y) => {
-	const { x1, y1, x2, y2, tool } = element;
+const nearCorner = (x, y, x1, y1, name) => {
+	return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
+};
 
-	switch (tool) {
+const positionWithinElement = (element, x, y) => {
+	const { x1, y1, x2, y2, type } = element;
+
+	let inside, topLeft, topRight, bottomLeft, bottomRight;
+	let start, end;
+
+	switch (type) {
 		case "line":
 			const m = (y2 - y1) / (x2 - x1);
 			const c = y1 - m * x1;
 			const f = (x) => m * x + c;
 			const v = f(x);
-			return v - 5 <= y && y <= v + 5;
+			inside = v - 5 <= y && y <= v + 5 ? "inside" : null;
+			start = nearCorner(x, y, x1, y1, "start");
+			end = nearCorner(x, y, x2, y2, "end");
+
+			return start || end || inside;
 		case "rectangle":
-			return x1 <= x && x <= x2 && y1 <= y && y <= y2;
+			topLeft = nearCorner(x, y, x1, y1, "tl");
+			topRight = nearCorner(x, y, x2, y1, "tr");
+			bottomLeft = nearCorner(x, y, x1, y2, "bl");
+			bottomRight = nearCorner(x, y, x2, y2, "br");
+			inside = x1 <= x && x <= x2 && y1 <= y && y <= y2 ? "inside" : null;
+
+			return topLeft || topRight || bottomLeft || bottomRight || inside;
 		default:
-			return false;
+			return null;
 	}
 };
 
-function getElememtAtPosition(x, y, elements) {
-	return elements.find((element) => isWithinElement(element, x, y));
+function getElementAtPosition(x, y, elements) {
+	return elements
+		.map((element) => {
+			return {
+				...element,
+				position: positionWithinElement(element, x, y),
+			};
+		})
+		.find((element) => element.position);
+}
+
+function adjustElementCoordinates(element) {
+	const { x1, y1, x2, y2, type } = element;
+
+	switch (type) {
+		case "line":
+			if (x1 < x2 || (x1 === x2 && y1 < y2)) {
+				return { x1, y1, x2, y2 };
+			} else {
+				return { x1: x2, y1: y2, x2: x1, y2: y1 };
+			}
+		case "rectangle":
+			return {
+				x1: Math.min(x1, x2),
+				y1: Math.min(y1, y2),
+				x2: Math.max(x1, x2),
+				y2: Math.max(y1, y2),
+			};
+		default:
+			return { x1, y1, x2, y2 };
+	}
+}
+
+function elementForPosition(position) {
+	switch (position) {
+		case "tl":
+		case "br":
+		case "start":
+		case "end":
+			return "nwse-resize";
+		case "tr":
+		case "bl":
+			return "nesw-resize";
+		default:
+			return "move";
+	}
+}
+
+function resizedElementCoordinates(clientX, clientY, position, coordinates) {
+	switch (position) {
+		case "tl":
+			return {
+				x1: clientX,
+				y1: clientY,
+				x2: coordinates.x2,
+				y2: coordinates.y2,
+			};
+		case "br":
+			return {
+				x1: coordinates.x1,
+				y1: coordinates.y1,
+				x2: clientX,
+				y2: clientY,
+			};
+		case "tr":
+			return {
+				x1: coordinates.x1,
+				y1: clientY,
+				x2: clientX,
+				y2: coordinates.y2,
+			};
+		case "bl":
+			return {
+				x1: clientX,
+				y1: coordinates.y1,
+				x2: coordinates.x2,
+				y2: clientY,
+			};
+		case "start":
+			return {
+				x1: clientX,
+				y1: clientY,
+				x2: coordinates.x2,
+				y2: coordinates.y2,
+			};
+		case "end":
+			return {
+				x1: coordinates.x1,
+				y1: coordinates.y1,
+				x2: clientX,
+				y2: clientY,
+			};
+		default:
+			return coordinates;
+	}
 }
 
 function App() {
@@ -71,16 +181,8 @@ function App() {
 		elements.forEach(({ element }) => roughCanvas.draw(element));
 	}, [elements]);
 
-	React.useEffect(() => {
-		if (tool === "selection") {
-			setAction("selection");
-		} else {
-			setAction("none");
-		}
-	}, [tool]);
-
-	const updateElement = (id, x1, y1, x2, y2, tool) => {
-		const updatedElement = createElement(id, x1, y1, x2, y2, tool);
+	const updateElement = (id, x1, y1, x2, y2, type) => {
+		const updatedElement = createElement(id, x1, y1, x2, y2, type);
 
 		const elementsCopy = [...elements];
 		elementsCopy[id] = updatedElement;
@@ -88,8 +190,8 @@ function App() {
 	};
 
 	const handleMouseDown = (event) => {
-		if (action === "selection" || action === "moving") {
-			const element = getElememtAtPosition(
+		if (tool === "selection") {
+			const element = getElementAtPosition(
 				event.clientX,
 				event.clientY,
 				elements
@@ -97,7 +199,11 @@ function App() {
 			if (element) {
 				const offsetX = event.clientX - element.x1;
 				const offsetY = event.clientY - element.y1;
-				setAction("moving");
+				if (element.position === "inside") {
+					setAction("moving");
+				} else {
+					setAction("resizing");
+				}
 				setSelectedElement({ ...element, offsetX, offsetY });
 			} else {
 				setAction("selection");
@@ -114,6 +220,7 @@ function App() {
 				clientY,
 				tool
 			);
+			setSelectedElement(newElement);
 			setElements((prev) => [...prev, newElement]);
 		}
 	};
@@ -122,16 +229,18 @@ function App() {
 		const { clientX, clientY } = event;
 
 		if (tool === "selection") {
-			const element = getElememtAtPosition(clientX, clientY, elements);
+			const element = getElementAtPosition(clientX, clientY, elements);
 			if (element) {
-				document.body.style.cursor = "move";
+				document.body.style.cursor = elementForPosition(
+					element.position
+				);
 			} else {
 				document.body.style.cursor = "default";
 			}
 		}
 
 		if (action === "moving") {
-			const { x1, y1, x2, y2, id, tool, offsetX, offsetY } =
+			const { x1, y1, x2, y2, id, type, offsetX, offsetY } =
 				selectedElement;
 
 			const width = x2 - x1;
@@ -140,25 +249,39 @@ function App() {
 			const dx = clientX - offsetX;
 			const dy = clientY - offsetY;
 
-			updateElement(id, dx, dy, dx + width, dy + height, tool);
+			updateElement(id, dx, dy, dx + width, dy + height, type);
 		} else if (action === "drawing") {
 			setAction("drawing");
 
 			const index = elements.length - 1;
-			const { x1, y1 } = elements[index];
-			updateElement(index, x1, y1, clientX, clientY, tool);
+			const { x1, y1, type } = elements[index];
+			updateElement(index, x1, y1, clientX, clientY, type);
+		} else if (action === "resizing") {
+			const { id, type, position, ...coordinates } = selectedElement;
+			const { x1, y1, x2, y2 } = resizedElementCoordinates(
+				clientX,
+				clientY,
+				position,
+				coordinates
+			);
+			updateElement(id, x1, y1, x2, y2, type);
 		}
 	};
 
 	const handleMouseUp = () => {
-		if (tool === "selection") {
-			if (action === "moving") {
-				setAction("selection");
-			}
-			return;
-		} else {
-			setAction("none");
+		if (action === "drawing" || action === "resizing") {
+			const index = selectedElement.id;
+			const { id, type } = elements[index];
+
+			const { x1, y1, x2, y2 } = adjustElementCoordinates(
+				elements[index]
+			);
+
+			updateElement(id, x1, y1, x2, y2, type);
 		}
+
+		setAction("none");
+		setSelectedElement(null);
 	};
 
 	return (
