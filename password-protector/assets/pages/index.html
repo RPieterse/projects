@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>File Protector</title>
+		<!-- Stylesheets -->
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+		<script
+			src="https://kit.fontawesome.com/2b4e139594.js"
+			crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="../css/global.css" />
+
+		<!-- Scripts -->
+		<script src="../js/scripts/jquery.js"></script>
+		<script>
+			try {
+				$ = jQuery = module.exports;
+			} catch (e) {}
+		</script>
+	</head>
+	<body class="flex justify-content-center">
+		<div class="page-container p-lg text-center">
+			<h1 class="mb-sm">File Protector</h1>
+			<div>
+				<label
+					for="file-input"
+					id="file-input-label"
+					class="bg-white-50 rounded-md mb-sm p-sm cursor-pointer">
+					<div class="border-dotted rounded-md p-sm">
+						<img src="../img/upload.png" alt="Upload" />
+						<p class="mt-md mb-none">Drag and drop files here</p>
+					</div>
+				</label>
+				<p>Supported Files Include XLSX files</p>
+				<input
+					accept=".xlsx"
+					hidden
+					type="file"
+					id="file-input"
+					multiple />
+				<input
+					type="text"
+					required
+					id="password-input"
+					placeholder="Password*" />
+				<input
+					type="text"
+					id="zip-folder-name-input"
+					placeholder="Zip Folder Name" />
+				<label>
+					<input type="checkbox" id="append-date" />
+					Append date to zip folder
+				</label>
+
+				<article id="list-card">
+					<ul id="file-list" class="mt-md"></ul>
+				</article>
+
+				<div class="flex mt-md">
+					<button id="protect-btn">
+						Password Protect
+					</button>
+					<!-- <button id="info-btn" class="w-auto">
+						<i class="fa fa-info"></i>
+					</button> -->
+				</div>
+			</div>
+			<div>
+				<hr />
+				<p>File Protector is a product of <a href="#">RPDigital</a>.</p>
+			</div>
+		</div>
+
+		<!-- Info Modal -->
+		<dialog id="info-modal">
+			<article>
+				<header>
+					<a href="#close" aria-label="Close" id="close-info-btn" class="close"></a>
+					Information
+				</header>
+				<p>
+					To restore your product key when you switch devices, please
+					use this key as your restoration key:
+					<strong id="restoration-key"></span>
+				</p>
+
+				<p></p>
+			</article>
+		</dialog>
+
+		<article id="notification" class="hidden">
+			<p id="message"></p>
+			<button id="close-button" onClick="closeNotification()">
+			  Close
+			</button>
+			<button id="restart-button" onClick="restartApp()" class="hidden">
+			  Restart
+			</button>
+		</div>
+
+		<script src="../js/scripts/secure-page.js"></script>
+		<script src="../js/index.js" defer></script>
+		<script src="../js/scripts/watcher.js"></script>
+	</body>
+</html>

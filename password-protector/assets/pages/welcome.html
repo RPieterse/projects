@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>File Protector</title>
+
+		<!-- Stylesheets -->
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+		<link rel="stylesheet" href="../css/global.css" />
+
+		<!-- Scripts -->
+		<script src="../js/scripts/jquery.js"></script>
+		<script>
+			try {
+				$ = jQuery = module.exports;
+			} catch (e) {}
+		</script>
+	</head>
+	<body class="flex justify-content-center">
+		<div class="page-container p-lg text-center">
+			<div>
+				<img
+					src="../img/welcome.png"
+					height="300px"
+					alt="Protect Files" />
+				<h1 class="mb-sm">Greetings!</h1>
+				<h3 class="mb-md">
+					Are you ready to start protecting your files?
+				</h3>
+				<button id="activate-now">Activate Now</button>
+			</div>
+
+			<div>
+				<hr />
+				<p>File Protector is a product of <a href="#">RPDigital</a>.</p>
+			</div>
+		</div>
+
+		<!-- Scripts -->
+		<script src="../js/welcome.js" defer></script>
+		<script src="../js/scripts/watcher.js"></script>
+	</body>
+</html>

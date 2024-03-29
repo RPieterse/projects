@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>File Protector</title>
+
+		<!-- Stylesheets -->
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+		<link rel="stylesheet" href="../css/global.css" />
+
+		<!-- Scripts -->
+		<script src="../js/scripts/jquery.js"></script>
+		<script>
+			try {
+				$ = jQuery = module.exports;
+			} catch (e) {}
+		</script>
+	</head>
+	<body class="flex justify-content-center">
+		<div class="page-container p-lg text-center">
+			<div>
+				<img
+					src="../img/product_key.png"
+					height="300px"
+					alt="Protect Files" />
+				<h1 class="mb-sm">Product Key</h1>
+				<h3 class="mb-md">
+					Enter your product key to activate the software.
+				</h3>
+				<form>
+					<input
+						type="text"
+						class="text-center"
+						id="product-key"
+						placeholder="Enter your product key here..." />
+					<input
+						type="text"
+						hidden
+						class="text-center"
+						id="product-key-restore"
+						placeholder="Enter your restore key here..." />
+					<label class="mb-md">
+						<input type="checkbox" id="restore-me" />
+						<span>I want to restore my product key </span>
+					</label>
+					<button type="submit" id="lets-go">Let's Go!</button>
+				</form>
+				<p>
+					Don't have a product key ?
+					<a
+						href="mailto:rohanpieterse@icloud.com?subject=Product Key: File Protector&body=Hi Rohan, I would like to purchase a product key for your File Protector Software."
+						>Click here</a
+					>
+				</p>
+			</div>
+
+			<div>
+				<hr />
+				<p>File Protector is a product of <a href="#">RPDigital</a>.</p>
+			</div>
+		</div>
+
+		<!-- Scripts -->
+		<script src="../js/product_key.js" defer></script>
+		<script src="../js/scripts/watcher.js"></script>
+	</body>
+</html>

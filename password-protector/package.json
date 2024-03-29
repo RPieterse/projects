@@ -1,0 +1,32 @@
+{
+	"name": "password-protector",
+	"productName": "Password Protector",
+	"version": "1.0.0",
+	"description": "bulk password protect files",
+	"main": "main.js",
+	"scripts": {
+		"start": "electron .",
+		"build": "electron-builder build --mac --win --publish never",
+		"deploy": "electron-builder build --mac --win --publish always"
+	},
+	"author": "Rohan Pieterse",
+	"license": "ISC",
+	"devDependencies": {
+		"electron": "^27.0.2",
+		"electron-builder": "^24.6.4"
+	},
+	"dependencies": {
+		"axios": "^1.6.0",
+		"dotenv": "^16.3.1",
+		"downloads-folder": "^3.0.3",
+		"electron-updater": "^6.1.4",
+		"ini": "^4.1.1",
+		"jszip": "^3.10.1",
+		"node-qpdf": "^1.0.3",
+		"xlsx-populate": "^1.21.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/RPCapital/file-protector.git"
+	}
+}
