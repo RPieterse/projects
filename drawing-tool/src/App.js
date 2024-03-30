@@ -1,5 +1,6 @@
 import React from "react";
 import rough from "roughjs/bundled/rough.esm";
+import getStroke from "perfect-freehand";
 
 const generator = rough.generator();
 
@@ -25,6 +26,12 @@ function createElement(id, x1, y1, x2, y2, type) {
 				y2 - y1
 			);
 			break;
+		case "pencil":
+			return {
+				id,
+				type,
+				points: [{ x: x1, y: y1 }],
+			};
 		default:
 			roughElement["element"] = generator.line(x1, y1, x2, y2);
 	}
@@ -36,6 +43,19 @@ const nearCorner = (x, y, x1, y1, name) => {
 	return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
 };
 
+const distance = (a, b) =>
+	Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+
+const onLine = (x, y, x1, y1, x2, y2, maxOffset = 1) => {
+	const a = { x: x1, y: y1 };
+	const b = { x: x2, y: y2 };
+	const c = { x, y };
+
+	const offset = distance(a, b) - (distance(a, c) + distance(b, c));
+
+	return Math.abs(offset) < maxOffset ? "inside" : null;
+};
+
 const positionWithinElement = (element, x, y) => {
 	const { x1, y1, x2, y2, type } = element;
 
@@ -44,14 +64,9 @@ const positionWithinElement = (element, x, y) => {
 
 	switch (type) {
 		case "line":
-			const m = (y2 - y1) / (x2 - x1);
-			const c = y1 - m * x1;
-			const f = (x) => m * x + c;
-			const v = f(x);
-			inside = v - 5 <= y && y <= v + 5 ? "inside" : null;
+			inside = onLine(x, y, x1, y1, x2, y2);
 			start = nearCorner(x, y, x1, y1, "start");
 			end = nearCorner(x, y, x2, y2, "end");
-
 			return start || end || inside;
 		case "rectangle":
 			topLeft = nearCorner(x, y, x1, y1, "tl");
@@ -59,8 +74,28 @@ const positionWithinElement = (element, x, y) => {
 			bottomLeft = nearCorner(x, y, x1, y2, "bl");
 			bottomRight = nearCorner(x, y, x2, y2, "br");
 			inside = x1 <= x && x <= x2 && y1 <= y && y <= y2 ? "inside" : null;
-
 			return topLeft || topRight || bottomLeft || bottomRight || inside;
+		case "pencil":
+			const betweenAnyPoints = element.points.some((point, index) => {
+				const nextPoint = element.points[index + 1];
+				if (!nextPoint) {
+					return false;
+				}
+
+				return (
+					onLine(
+						x,
+						y,
+						point.x,
+						point.y,
+						nextPoint.x,
+						nextPoint.y,
+						5
+					) !== null
+				);
+			});
+
+			return betweenAnyPoints ? "inside" : null;
 		default:
 			return null;
 	}
@@ -196,12 +231,64 @@ const useHistory = (initialState) => {
 	return [history[index], setState, undo, redo];
 };
 
+const average = (a, b) => (a + b) / 2;
+
+function getSvgPathFromStroke(points, closed = true) {
+	const len = points.length;
+
+	if (len < 4) {
+		return ``;
+	}
+
+	let a = points[0];
+	let b = points[1];
+	const c = points[2];
+
+	let result = `M${a[0].toFixed(2)},${a[1].toFixed(2)} Q${b[0].toFixed(
+		2
+	)},${b[1].toFixed(2)} ${average(b[0], c[0]).toFixed(2)},${average(
+		b[1],
+		c[1]
+	).toFixed(2)} T`;
+
+	for (let i = 2, max = len - 1; i < max; i++) {
+		a = points[i];
+		b = points[i + 1];
+		result += `${average(a[0], b[0]).toFixed(2)},${average(
+			a[1],
+			b[1]
+		).toFixed(2)} `;
+	}
+
+	if (closed) {
+		result += "Z";
+	}
+
+	return result;
+}
+
+function adjustmentRequired(type) {
+	return type === "line" || type === "rectangle";
+}
+
+const drawElement = (roughCanvas, context, element) => {
+	if (element.type === "pencil") {
+		const outlinePoints = getStroke(element.points);
+		const pathData = getSvgPathFromStroke(outlinePoints);
+		const myPath = new Path2D(pathData);
+
+		context.fill(myPath);
+	} else {
+		return roughCanvas.draw(element.element);
+	}
+};
+
 function App() {
 	const [elements, setElements, undo, redo] = useHistory([[]]);
 
 	const [action, setAction] = React.useState("none");
 
-	const [tool, setTool] = React.useState("line");
+	const [tool, setTool] = React.useState("pencil");
 
 	const [selectedElement, setSelectedElement] = React.useState(null);
 
@@ -211,14 +298,21 @@ function App() {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		const roughCanvas = rough.canvas(canvas);
 
-		elements.forEach(({ element }) => roughCanvas.draw(element));
+		elements.forEach((element) =>
+			drawElement(roughCanvas, context, element)
+		);
 	}, [elements]);
 
 	const updateElement = (id, x1, y1, x2, y2, type) => {
-		const updatedElement = createElement(id, x1, y1, x2, y2, type);
-
 		const elementsCopy = [...elements];
-		elementsCopy[id] = updatedElement;
+		if (type === "pencil") {
+			const points = elements[id].points;
+			points.push({ x: x2, y: y2 });
+			elementsCopy[id] = { ...elements[id], points };
+		} else {
+			elementsCopy[id] = createElement(id, x1, y1, x2, y2, type);
+		}
+
 		setElements(elementsCopy, true);
 	};
 
@@ -249,14 +343,26 @@ function App() {
 				elements
 			);
 			if (element) {
-				const offsetX = event.clientX - element.x1;
-				const offsetY = event.clientY - element.y1;
+				if (element.type === "pencil") {
+					const xOffsets = element.points.map((point) => {
+						return event.clientX - point.x;
+					});
+					const yOffsets = element.points.map((point) => {
+						return event.clientY - point.y;
+					});
+
+					setSelectedElement({ ...element, xOffsets, yOffsets });
+				} else {
+					const offsetX = event.clientX - element.x1;
+					const offsetY = event.clientY - element.y1;
+
+					setSelectedElement({ ...element, offsetX, offsetY });
+				}
 				if (element.position === "inside") {
 					setAction("moving");
 				} else {
 					setAction("resizing");
 				}
-				setSelectedElement({ ...element, offsetX, offsetY });
 				setElements((prev) => prev);
 			} else {
 				setAction("selection");
@@ -293,19 +399,31 @@ function App() {
 		}
 
 		if (action === "moving") {
-			const { x1, y1, x2, y2, id, type, offsetX, offsetY } =
-				selectedElement;
+			if (selectedElement.type === "pencil") {
+				const { xOffsets, yOffsets, points, id } = selectedElement;
+				const updatedPoints = points.map((_, index) => {
+					return {
+						x: clientX - xOffsets[index],
+						y: clientY - yOffsets[index],
+					};
+				});
+				const elementsCopy = [...elements];
+				elementsCopy[id] = { ...elements[id], points: updatedPoints };
+				setElements(elementsCopy, true);
+			} else {
+				const { x1, y1, x2, y2, id, type, offsetX, offsetY } =
+					selectedElement;
 
-			const width = x2 - x1;
-			const height = y2 - y1;
+				const width = x2 - x1;
+				const height = y2 - y1;
 
-			const dx = clientX - offsetX;
-			const dy = clientY - offsetY;
+				const dx = clientX - offsetX;
+				const dy = clientY - offsetY;
 
-			updateElement(id, dx, dy, dx + width, dy + height, type);
+				updateElement(id, dx, dy, dx + width, dy + height, type);
+			}
 		} else if (action === "drawing") {
 			setAction("drawing");
-
 			const index = elements.length - 1;
 			const { x1, y1, type } = elements[index];
 			updateElement(index, x1, y1, clientX, clientY, type);
@@ -322,15 +440,20 @@ function App() {
 	};
 
 	const handleMouseUp = () => {
-		if (action === "drawing" || action === "resizing") {
+		if (selectedElement) {
 			const index = selectedElement.id;
 			const { id, type } = elements[index];
 
-			const { x1, y1, x2, y2 } = adjustElementCoordinates(
-				elements[index]
-			);
+			if (
+				(action === "drawing" || action === "resizing") &&
+				adjustmentRequired(type)
+			) {
+				const { x1, y1, x2, y2 } = adjustElementCoordinates(
+					elements[index]
+				);
 
-			updateElement(id, x1, y1, x2, y2, type);
+				updateElement(id, x1, y1, x2, y2, type);
+			}
 		}
 
 		setAction("none");
@@ -367,6 +490,15 @@ function App() {
 					onChange={() => setTool("rectangle")}
 				/>
 				<label htmlFor="rectangle">Rectangle</label>
+				<input
+					type="radio"
+					id="pencil"
+					name="tool"
+					value="pencil"
+					checked={tool === "pencil"}
+					onChange={() => setTool("pencil")}
+				/>
+				<label htmlFor="pencil">Pencil</label>
 			</div>
 			<div style={{ position: "fixed", bottom: 0, padding: 10 }}>
 				<button onClick={undo}>Undo</button>
