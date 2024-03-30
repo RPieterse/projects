@@ -163,8 +163,41 @@ function resizedElementCoordinates(clientX, clientY, position, coordinates) {
 	}
 }
 
+const useHistory = (initialState) => {
+	const [index, setIndex] = React.useState(0);
+	const [history, setHistory] = React.useState(initialState);
+
+	const setState = (action, overwrite = false) => {
+		const newState =
+			typeof action === "function" ? action(history[index]) : action;
+		if (overwrite) {
+			const historyCopy = [...history];
+			historyCopy[index] = newState;
+			setHistory(historyCopy);
+		} else {
+			const updatedState = [...history].slice(0, index + 1);
+			setHistory([...updatedState, newState]);
+			setIndex((prev) => prev + 1);
+		}
+	};
+
+	const undo = () => {
+		if (index > 0) {
+			setIndex((prev) => prev - 1);
+		}
+	};
+
+	const redo = () => {
+		if (index < history.length - 1) {
+			setIndex((prev) => prev + 1);
+		}
+	};
+
+	return [history[index], setState, undo, redo];
+};
+
 function App() {
-	const [elements, setElements] = React.useState([]);
+	const [elements, setElements, undo, redo] = useHistory([[]]);
 
 	const [action, setAction] = React.useState("none");
 
@@ -186,8 +219,27 @@ function App() {
 
 		const elementsCopy = [...elements];
 		elementsCopy[id] = updatedElement;
-		setElements(elementsCopy);
+		setElements(elementsCopy, true);
 	};
+
+	React.useEffect(() => {
+		const handleUndoRedoKeyDown = (event) => {
+			if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+				event.preventDefault();
+				if (event.shiftKey) {
+					redo();
+				} else {
+					undo();
+				}
+			}
+		};
+
+		document.addEventListener("keydown", handleUndoRedoKeyDown);
+
+		return () => {
+			document.removeEventListener("keydown", handleUndoRedoKeyDown);
+		};
+	}, [undo, redo]);
 
 	const handleMouseDown = (event) => {
 		if (tool === "selection") {
@@ -205,6 +257,7 @@ function App() {
 					setAction("resizing");
 				}
 				setSelectedElement({ ...element, offsetX, offsetY });
+				setElements((prev) => prev);
 			} else {
 				setAction("selection");
 			}
@@ -315,7 +368,10 @@ function App() {
 				/>
 				<label htmlFor="rectangle">Rectangle</label>
 			</div>
-
+			<div style={{ position: "fixed", bottom: 0, padding: 10 }}>
+				<button onClick={undo}>Undo</button>
+				<button onClick={redo}>Redo</button>
+			</div>
 			<canvas
 				id="canvas"
 				width={window.innerWidth}
