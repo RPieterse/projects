@@ -32,8 +32,18 @@ function createElement(id, x1, y1, x2, y2, type) {
 				type,
 				points: [{ x: x1, y: y1 }],
 			};
+		case "text":
+			return {
+				id,
+				type,
+				x1,
+				y1,
+				x2,
+				y2,
+				text: "",
+			};
 		default:
-			roughElement["element"] = generator.line(x1, y1, x2, y2);
+			throw new Error("Invalid element type");
 	}
 
 	return roughElement;
@@ -96,6 +106,8 @@ const positionWithinElement = (element, x, y) => {
 			});
 
 			return betweenAnyPoints ? "inside" : null;
+		case "text":
+			return x1 <= x && x <= x2 && y1 <= y && y <= y2 ? "inside" : null;
 		default:
 			return null;
 	}
@@ -278,6 +290,10 @@ const drawElement = (roughCanvas, context, element) => {
 		const myPath = new Path2D(pathData);
 
 		context.fill(myPath);
+	} else if (element.type === "text") {
+		context.font = "24px serif";
+		context.textBaseline = "top";
+		context.fillText(element.text, element.x1, element.y1);
 	} else {
 		return roughCanvas.draw(element.element);
 	}
@@ -288,9 +304,11 @@ function App() {
 
 	const [action, setAction] = React.useState("none");
 
-	const [tool, setTool] = React.useState("pencil");
+	const [tool, setTool] = React.useState("text");
 
 	const [selectedElement, setSelectedElement] = React.useState(null);
+
+	const textareaRef = React.useRef();
 
 	React.useLayoutEffect(() => {
 		const canvas = document.getElementById("canvas");
@@ -298,17 +316,37 @@ function App() {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		const roughCanvas = rough.canvas(canvas);
 
-		elements.forEach((element) =>
-			drawElement(roughCanvas, context, element)
-		);
-	}, [elements]);
+		elements.forEach((element) => {
+			if (action === "writing" && selectedElement.id === element.id) {
+				return;
+			}
+			return drawElement(roughCanvas, context, element);
+		});
+	}, [elements, action, selectedElement]);
 
-	const updateElement = (id, x1, y1, x2, y2, type) => {
+	const updateElement = (id, x1, y1, x2, y2, type, options = {}) => {
 		const elementsCopy = [...elements];
 		if (type === "pencil") {
 			const points = elements[id].points;
 			points.push({ x: x2, y: y2 });
 			elementsCopy[id] = { ...elements[id], points };
+		} else if (type === "text") {
+			const textWidth = document
+				.getElementById("canvas")
+				.getContext("2d")
+				.measureText(options.text).width;
+			const textHeight = 24;
+			elementsCopy[id] = {
+				...createElement(
+					id,
+					x1,
+					y1,
+					x1 + textWidth,
+					y1 + textHeight,
+					type
+				),
+				text: options.text,
+			};
 		} else {
 			elementsCopy[id] = createElement(id, x1, y1, x2, y2, type);
 		}
@@ -327,15 +365,35 @@ function App() {
 				}
 			}
 		};
-
 		document.addEventListener("keydown", handleUndoRedoKeyDown);
-
 		return () => {
 			document.removeEventListener("keydown", handleUndoRedoKeyDown);
 		};
 	}, [undo, redo]);
 
+	React.useEffect(() => {
+		const textArea = textareaRef.current;
+		if (action === "writing") {
+			setTimeout(() => {
+				textArea.focus();
+				textArea.value = selectedElement.text;
+			}, 1);
+		}
+	}, [action, selectedElement]);
+
+	const handleBlur = () => {
+		const { id, type, x1, y1 } = selectedElement;
+		setAction("none");
+		setSelectedElement(null);
+		updateElement(id, x1, y1, x1, y1, type, {
+			text: textareaRef.current.value,
+		});
+	};
+
 	const handleMouseDown = (event) => {
+		if (action === "writing") {
+			return;
+		}
 		if (tool === "selection") {
 			const element = getElementAtPosition(
 				event.clientX,
@@ -368,7 +426,12 @@ function App() {
 				setAction("selection");
 			}
 		} else {
-			setAction("drawing");
+			if (tool === "text") {
+				setAction("writing");
+			} else {
+				setAction("drawing");
+			}
+
 			const { clientX, clientY } = event;
 
 			const newElement = createElement(
@@ -379,8 +442,9 @@ function App() {
 				clientY,
 				tool
 			);
-			setSelectedElement(newElement);
+
 			setElements((prev) => [...prev, newElement]);
+			setSelectedElement(newElement);
 		}
 	};
 
@@ -410,6 +474,23 @@ function App() {
 				const elementsCopy = [...elements];
 				elementsCopy[id] = { ...elements[id], points: updatedPoints };
 				setElements(elementsCopy, true);
+			} else if (selectedElement.type === "text") {
+				const { id, type, offsetX, offsetY, text } = selectedElement;
+
+				const dx = clientX - offsetX;
+				const dy = clientY - offsetY;
+
+				updateElement(
+					id,
+					dx,
+					dy,
+					dx + selectedElement.x2 - selectedElement.x1,
+					dy + selectedElement.y2 - selectedElement.y1,
+					type,
+					{
+						text,
+					}
+				);
 			} else {
 				const { x1, y1, x2, y2, id, type, offsetX, offsetY } =
 					selectedElement;
@@ -439,8 +520,19 @@ function App() {
 		}
 	};
 
-	const handleMouseUp = () => {
+	const handleMouseUp = (event) => {
+		const { clientX, clientY } = event;
+
 		if (selectedElement) {
+			if (
+				selectedElement.type === "text" &&
+				clientX - selectedElement.offsetX === selectedElement.x1 &&
+				clientY - selectedElement.offsetY === selectedElement.y1
+			) {
+				setAction("writing");
+				return;
+			}
+
 			const index = selectedElement.id;
 			const { id, type } = elements[index];
 
@@ -454,6 +546,10 @@ function App() {
 
 				updateElement(id, x1, y1, x2, y2, type);
 			}
+		}
+
+		if (action === "writing") {
+			return;
 		}
 
 		setAction("none");
@@ -499,11 +595,39 @@ function App() {
 					onChange={() => setTool("pencil")}
 				/>
 				<label htmlFor="pencil">Pencil</label>
+				<input
+					type="radio"
+					id="text"
+					name="tool"
+					value="text"
+					checked={tool === "text"}
+					onChange={() => setTool("text")}
+				/>
+				<label htmlFor="text">Text</label>
 			</div>
 			<div style={{ position: "fixed", bottom: 0, padding: 10 }}>
 				<button onClick={undo}>Undo</button>
 				<button onClick={redo}>Redo</button>
 			</div>
+			{action === "writing" && selectedElement && (
+				<textarea
+					ref={textareaRef}
+					onBlur={handleBlur}
+					style={{
+						position: "fixed",
+						top: selectedElement.y1 - 6,
+						left: selectedElement.x1,
+						font: "24px serif",
+						margin: 0,
+						padding: 0,
+						border: "none",
+						outline: "none",
+						resize: "auto",
+						overflow: "hidden",
+						whitespace: "pre",
+						background: "transparent",
+					}}></textarea>
+			)}
 			<canvas
 				id="canvas"
 				width={window.innerWidth}
