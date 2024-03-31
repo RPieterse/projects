@@ -342,21 +342,14 @@ function App() {
 
 	const [zoom, setZoom] = React.useState(1);
 
+	const [zoomOffset, setZoomOffset] = React.useState({ x: 0, y: 0 });
+
 	const [startPanMousePosition, setStartPanMousePosition] = React.useState({
 		x: 0,
 		y: 0,
 	});
 
 	const pressedKeys = usePressedKeys();
-
-	const getMouseCoordinates = (event) => {
-		const { clientX, clientY } = event;
-
-		return {
-			clientX: clientX - panOffset.x,
-			clientY: clientY - panOffset.y,
-		};
-	};
 
 	React.useLayoutEffect(() => {
 		const canvas = document.getElementById("canvas");
@@ -365,8 +358,19 @@ function App() {
 
 		context.clearRect(0, 0, canvas.width, canvas.height);
 
+		const scaledWidth = canvas.width * zoom;
+		const scaledHeight = canvas.height * zoom;
+
+		const scaledOffsetX = (scaledWidth - canvas.width) / 2;
+		const scaledOffsetY = (scaledHeight - canvas.height) / 2;
+
+		setZoomOffset({ x: scaledOffsetX, y: scaledOffsetY });
+
 		context.save();
-		context.translate(panOffset.x, panOffset.y);
+		context.translate(
+			panOffset.x * zoom - scaledOffsetX,
+			panOffset.y * zoom - scaledOffsetY
+		);
 		context.scale(zoom, zoom);
 
 		elements.forEach((element) => {
@@ -426,19 +430,23 @@ function App() {
 	}, [undo, redo]);
 
 	React.useEffect(() => {
-		const panFunction = (event) => {
-			setPanOffset((prev) => {
-				return {
-					x: prev.x - event.deltaX,
-					y: prev.y - event.deltaY,
-				};
-			});
+		const panOrZoomFunction = (event) => {
+			if (pressedKeys.has("Control") || pressedKeys.has("Meta")) {
+				onZoom(event.deltaY * -0.01);
+			} else {
+				setPanOffset((prev) => {
+					return {
+						x: prev.x - event.deltaX,
+						y: prev.y - event.deltaY,
+					};
+				});
+			}
 		};
-		document.addEventListener("wheel", panFunction);
+		document.addEventListener("wheel", panOrZoomFunction);
 		return () => {
-			document.removeEventListener("wheel", panFunction);
+			document.removeEventListener("wheel", panOrZoomFunction);
 		};
-	}, []);
+	}, [pressedKeys]);
 
 	React.useEffect(() => {
 		const textArea = textareaRef.current;
@@ -459,6 +467,26 @@ function App() {
 		});
 	};
 
+	const getMouseCoordinates = (event) => {
+		const { clientX, clientY } = event;
+
+		return {
+			clientX: (clientX - panOffset.x * zoom + zoomOffset.x) / zoom,
+			clientY: (clientY - panOffset.y * zoom + zoomOffset.y) / zoom,
+		};
+	};
+
+	const onZoom = (amount) => {
+		setZoom((prev) => {
+			if (amount === undefined) {
+				return 1;
+			}
+			const newZoom = prev + amount;
+
+			return Math.min(Math.max(newZoom, 0.1), 3);
+		});
+	};
+
 	const handleMouseDown = (event) => {
 		const { clientX, clientY } = getMouseCoordinates(event);
 		if (event.button === 1 || pressedKeys.has(" ")) {
@@ -470,11 +498,8 @@ function App() {
 			return;
 		}
 		if (tool === "selection") {
-			const element = getElementAtPosition(
-				event.clientX,
-				event.clientY,
-				elements
-			);
+			const element = getElementAtPosition(clientX, clientY, elements);
+
 			if (element) {
 				if (element.type === "pencil") {
 					const xOffsets = element.points.map((point) => {
@@ -486,8 +511,8 @@ function App() {
 
 					setSelectedElement({ ...element, xOffsets, yOffsets });
 				} else {
-					const offsetX = event.clientX - element.x1;
-					const offsetY = event.clientY - element.y1;
+					const offsetX = clientX - element.x1;
+					const offsetY = clientY - element.y1;
 
 					setSelectedElement({ ...element, offsetX, offsetY });
 				}
@@ -552,8 +577,8 @@ function App() {
 				const { xOffsets, yOffsets, points, id } = selectedElement;
 				const updatedPoints = points.map((_, index) => {
 					return {
-						x: clientX - xOffsets[index],
-						y: clientY - yOffsets[index],
+						x: clientX - xOffsets[index] + panOffset.x,
+						y: clientY - yOffsets[index] + panOffset.y,
 					};
 				});
 				const elementsCopy = [...elements];
@@ -562,8 +587,8 @@ function App() {
 			} else if (selectedElement.type === "text") {
 				const { id, type, offsetX, offsetY, text } = selectedElement;
 
-				const dx = clientX - offsetX;
-				const dy = clientY - offsetY;
+				const dx = clientX - offsetX + panOffset.x;
+				const dy = clientY - offsetY + panOffset.y;
 
 				updateElement(
 					id,
@@ -585,7 +610,6 @@ function App() {
 
 				const dx = clientX - offsetX;
 				const dy = clientY - offsetY;
-
 				updateElement(id, dx, dy, dx + width, dy + height, type);
 			}
 		} else if (action === "drawing") {
@@ -611,8 +635,10 @@ function App() {
 		if (selectedElement) {
 			if (
 				selectedElement.type === "text" &&
-				clientX - selectedElement.offsetX === selectedElement.x1 &&
-				clientY - selectedElement.offsetY === selectedElement.y1
+				clientX - selectedElement.offsetX + panOffset.x ===
+					selectedElement.x1 &&
+				clientY - selectedElement.offsetY + panOffset.y ===
+					selectedElement.y1
 			) {
 				setAction("writing");
 				return;
@@ -699,8 +725,14 @@ function App() {
 				}}>
 				<button onClick={undo}>Undo</button>
 				<button onClick={redo}>Redo</button>
-				<button onClick={() => setZoom((prev) => prev + 0.1)}>+</button>
-				<button onClick={() => setZoom((prev) => prev - 0.1)}>-</button>
+				<span> </span>
+				<button onClick={() => onZoom(-0.1)}>-</button>
+				<button onClick={() => onZoom()}>
+					{new Intl.NumberFormat("en-GB", {
+						style: "percent",
+					}).format(zoom)}
+				</button>
+				<button onClick={() => onZoom(0.1)}>+</button>
 			</div>
 			{action === "writing" && selectedElement && (
 				<textarea
@@ -708,9 +740,15 @@ function App() {
 					onBlur={handleBlur}
 					style={{
 						position: "fixed",
-						top: selectedElement.y1 - 6 + panOffset.y,
-						left: selectedElement.x1 + panOffset.x,
-						font: "24px serif",
+						top:
+							(selectedElement.y1 - 6) * zoom +
+							panOffset.y * zoom -
+							zoomOffset.y,
+						left:
+							selectedElement.x1 * zoom +
+							panOffset.x * zoom -
+							zoomOffset.x,
+						font: `${24 * zoom}px serif`,
 						margin: 0,
 						zIndex: 2,
 						padding: 0,
