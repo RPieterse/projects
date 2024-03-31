@@ -299,6 +299,34 @@ const drawElement = (roughCanvas, context, element) => {
 	}
 };
 
+const usePressedKeys = () => {
+	const [pressedKeys, setPressedKeys] = React.useState(new Set());
+
+	React.useEffect(() => {
+		const handleKeyDown = (event) => {
+			setPressedKeys((prev) => new Set([...prev]).add(event.key));
+		};
+
+		const handleKeyUp = (event) => {
+			setPressedKeys((prev) => {
+				const newSet = new Set([...prev]);
+				newSet.delete(event.key);
+				return newSet;
+			});
+		};
+
+		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener("keyup", handleKeyUp);
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown);
+			document.removeEventListener("keyup", handleKeyUp);
+		};
+	}, []);
+
+	return pressedKeys;
+};
+
 function App() {
 	const [elements, setElements, undo, redo] = useHistory([[]]);
 
@@ -310,11 +338,36 @@ function App() {
 
 	const textareaRef = React.useRef();
 
+	const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
+
+	const [zoom, setZoom] = React.useState(1);
+
+	const [startPanMousePosition, setStartPanMousePosition] = React.useState({
+		x: 0,
+		y: 0,
+	});
+
+	const pressedKeys = usePressedKeys();
+
+	const getMouseCoordinates = (event) => {
+		const { clientX, clientY } = event;
+
+		return {
+			clientX: clientX - panOffset.x,
+			clientY: clientY - panOffset.y,
+		};
+	};
+
 	React.useLayoutEffect(() => {
 		const canvas = document.getElementById("canvas");
 		const context = canvas.getContext("2d");
-		context.clearRect(0, 0, canvas.width, canvas.height);
 		const roughCanvas = rough.canvas(canvas);
+
+		context.clearRect(0, 0, canvas.width, canvas.height);
+
+		context.save();
+		context.translate(panOffset.x, panOffset.y);
+		context.scale(zoom, zoom);
 
 		elements.forEach((element) => {
 			if (action === "writing" && selectedElement.id === element.id) {
@@ -322,7 +375,8 @@ function App() {
 			}
 			return drawElement(roughCanvas, context, element);
 		});
-	}, [elements, action, selectedElement]);
+		context.restore();
+	}, [elements, action, selectedElement, panOffset, zoom]);
 
 	const updateElement = (id, x1, y1, x2, y2, type, options = {}) => {
 		const elementsCopy = [...elements];
@@ -372,6 +426,21 @@ function App() {
 	}, [undo, redo]);
 
 	React.useEffect(() => {
+		const panFunction = (event) => {
+			setPanOffset((prev) => {
+				return {
+					x: prev.x - event.deltaX,
+					y: prev.y - event.deltaY,
+				};
+			});
+		};
+		document.addEventListener("wheel", panFunction);
+		return () => {
+			document.removeEventListener("wheel", panFunction);
+		};
+	}, []);
+
+	React.useEffect(() => {
 		const textArea = textareaRef.current;
 		if (action === "writing") {
 			setTimeout(() => {
@@ -391,6 +460,12 @@ function App() {
 	};
 
 	const handleMouseDown = (event) => {
+		const { clientX, clientY } = getMouseCoordinates(event);
+		if (event.button === 1 || pressedKeys.has(" ")) {
+			setAction("panning");
+			setStartPanMousePosition({ x: clientX, y: clientY });
+		}
+
 		if (action === "writing") {
 			return;
 		}
@@ -432,8 +507,6 @@ function App() {
 				setAction("drawing");
 			}
 
-			const { clientX, clientY } = event;
-
 			const newElement = createElement(
 				elements.length,
 				clientX,
@@ -449,7 +522,19 @@ function App() {
 	};
 
 	const handleMouseMove = (event) => {
-		const { clientX, clientY } = event;
+		const { clientX, clientY } = getMouseCoordinates(event);
+
+		if (action === "panning") {
+			const deltaX = clientX - startPanMousePosition.x;
+			const deltaY = clientY - startPanMousePosition.y;
+			setPanOffset((prev) => {
+				return {
+					x: prev.x - deltaX,
+					y: prev.y - deltaY,
+				};
+			});
+			return;
+		}
 
 		if (tool === "selection") {
 			const element = getElementAtPosition(clientX, clientY, elements);
@@ -521,7 +606,7 @@ function App() {
 	};
 
 	const handleMouseUp = (event) => {
-		const { clientX, clientY } = event;
+		const { clientX, clientY } = getMouseCoordinates(event);
 
 		if (selectedElement) {
 			if (
@@ -558,7 +643,7 @@ function App() {
 
 	return (
 		<div>
-			<div style={{ position: "fixed" }}>
+			<div style={{ position: "fixed", zIndex: 2 }}>
 				<input
 					type="radio"
 					id="selection"
@@ -605,9 +690,17 @@ function App() {
 				/>
 				<label htmlFor="text">Text</label>
 			</div>
-			<div style={{ position: "fixed", bottom: 0, padding: 10 }}>
+			<div
+				style={{
+					position: "fixed",
+					bottom: 0,
+					padding: 10,
+					zIndex: 2,
+				}}>
 				<button onClick={undo}>Undo</button>
 				<button onClick={redo}>Redo</button>
+				<button onClick={() => setZoom((prev) => prev + 0.1)}>+</button>
+				<button onClick={() => setZoom((prev) => prev - 0.1)}>-</button>
 			</div>
 			{action === "writing" && selectedElement && (
 				<textarea
@@ -615,10 +708,11 @@ function App() {
 					onBlur={handleBlur}
 					style={{
 						position: "fixed",
-						top: selectedElement.y1 - 6,
-						left: selectedElement.x1,
+						top: selectedElement.y1 - 6 + panOffset.y,
+						left: selectedElement.x1 + panOffset.x,
 						font: "24px serif",
 						margin: 0,
+						zIndex: 2,
 						padding: 0,
 						border: "none",
 						outline: "none",
@@ -630,6 +724,10 @@ function App() {
 			)}
 			<canvas
 				id="canvas"
+				style={{
+					position: "absolute",
+					zIndex: 1,
+				}}
 				width={window.innerWidth}
 				height={window.innerHeight}
 				onMouseDown={handleMouseDown}
