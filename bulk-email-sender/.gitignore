@@ -1,6 +1,0 @@
-node_modules
-*.csv
-/attachment
-.env
-/templates/*.html
-!/templates/example.html
